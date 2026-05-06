@@ -6,17 +6,14 @@ Auteur: Adrien Buschbeck, Albert Stanislawek
 
 from collections import Counter
 import random as ran
-from typing import TypeAlias, cast, TypeVar
+from typing import cast
+from math import inf
 
-T = TypeVar("T")
-U = TypeVar("U")
-
-Position: TypeAlias = tuple[int, int]
-Coordinate: TypeAlias = list[Position]
-Matrix: TypeAlias = list[list[T]]
+type Position = tuple[int, int]
+type Matrix[T] = list[list[T]]
 
 
-def create_matrix(dim: tuple[int, int], element: T = 0) -> Matrix[T]:
+def create_matrix[T](dim: tuple[int, int], element: T = 0) -> Matrix[T]:
     """
     Retourne une matrice où chaque cellule est remplie par element
     dim[0] --> axe -y
@@ -25,7 +22,7 @@ def create_matrix(dim: tuple[int, int], element: T = 0) -> Matrix[T]:
     return [[element for _ in range(dim[1])] for _ in range(dim[0])]
 
 
-def up(matrix: Matrix[T], position: Position) -> tuple[Position, T] | None:
+def up[T](matrix: Matrix[T], position: Position) -> tuple[Position, T] | None:
     """
     Retourne la position et la valeur d'une cellule en haut d'une cellule
     position[0] --> axe -y
@@ -36,7 +33,7 @@ def up(matrix: Matrix[T], position: Position) -> tuple[Position, T] | None:
     return ((position[0] - 1, position[1]), matrix[position[0] - 1][position[1]])
 
 
-def down(matrix: Matrix[T], position: Position) -> tuple[Position, T] | None:
+def down[T](matrix: Matrix[T], position: Position) -> tuple[Position, T] | None:
     """
     Retourne la position et la valeur d'une cellule en bas d'une cellule
     position[0] --> axe -y
@@ -47,7 +44,7 @@ def down(matrix: Matrix[T], position: Position) -> tuple[Position, T] | None:
     return ((position[0] + 1, position[1]), matrix[position[0] + 1][position[1]])
 
 
-def right(matrix: Matrix[T], position: Position) -> tuple[Position, T] | None:
+def right[T](matrix: Matrix[T], position: Position) -> tuple[Position, T] | None:
     """
     Retourne la position et la valeur d'une cellule à droite d'une cellule
     position[0] --> axe -y
@@ -58,7 +55,7 @@ def right(matrix: Matrix[T], position: Position) -> tuple[Position, T] | None:
     return ((position[0], position[1] + 1), matrix[position[0]][position[1] + 1])
 
 
-def left(matrix: Matrix[T], position: Position) -> tuple[Position, T] | None:
+def left[T](matrix: Matrix[T], position: Position) -> tuple[Position, T] | None:
     """
     Retourne la position et la valeur d'une cellule à gauche d'une cellule
     position[0] --> axe -y
@@ -69,8 +66,8 @@ def left(matrix: Matrix[T], position: Position) -> tuple[Position, T] | None:
     return ((position[0], position[1] - 1), matrix[position[0]][position[1] - 1])
 
 
-def random_cell(
-    matrix: Matrix[T], coordinate: Coordinate | None = None
+def random_cell[T](
+    matrix: Matrix[T], coordinate: list[Position] | None = None
 ) -> tuple[Position, T]:
     """
     Retourne la valeur et la position aléatoire
@@ -85,7 +82,7 @@ def random_cell(
     ]
 
     def ran_cell(
-        matrix: Matrix[T], coordinates: Coordinate = coords
+        matrix: Matrix[T], coordinates: list[Position] = coords
     ) -> tuple[Position, T]:
         position = ran.choice(coordinates)
         column = position[0]
@@ -99,9 +96,9 @@ def random_cell(
         return ran_cell(matrix, coordinate)
 
 
-def lobject_cell(
-    matrix: Matrix[T], coordinate: Coordinate | None = None
-) -> tuple[Position, T]:
+def lobject_cell[T](
+    matrix: Matrix[T | dict[T, int]], coordinate: list[Position] | None = None
+) -> tuple[Position, dict[T, int]]:
     """
     Retourne la valeur et la position aléatoire
     de la cellule avec le moins d'éléments dans la matrice
@@ -109,43 +106,37 @@ def lobject_cell(
     coordinate[0] --> axe -y
     coordinate[1] --> axe x
     """
-    coords = [
-        (i, j) for j in range(len(matrix[len(matrix) - 1])) for i in range(len(matrix))
-    ]
-
-    def ob_cell(
-        matrix: Matrix[T], coordinates: Coordinate = coords
-    ) -> tuple[Position, T]:
-        cell_min = [
-            (
-                (coordinates[0][0], coordinates[0][1]),
-                matrix[coordinates[0][0]][coordinates[0][1]],
-            )
-        ]
-        for c in coordinates:
-            column = c[0]
-            row = c[1]
-            cell = matrix[column][row]
-
-            vartest = len(  # ToDo
-                list(Counter(matrix[cell_min[0][0][0]][cell_min[0][0][1]]).elements())
-            )
-
-            if len(list(Counter(cell).elements())) == vartest:  # ToDo
-                cell_min.append(((column, row), matrix[column][row]))
-
-            elif len(list(Counter(cell).elements())) < vartest:  # ToDo
-                cell_min = [((c[0], c[1]), cell)]
-
-        return ran.choice(cell_min)
 
     if coordinate == None:
-        return ob_cell(matrix)
-    else:
-        return ob_cell(matrix, coordinate)
+        coordinate = [
+            (i, j)
+            for j in range(len(matrix[len(matrix) - 1]))
+            for i in range(len(matrix))
+        ]
+
+    cell_min : list[tuple[Position, dict[T, int]]] = []
+    valmin = inf
+    for c in coordinate:
+        column = c[0]
+        row = c[1]
+        cell = matrix[column][row]
+        if type(cell) is dict[T, int]:
+
+            lencell = len(cell)
+
+            if lencell == valmin:
+                cell_min.append(((column, row), cell))
+
+            elif lencell < valmin:
+                valmin = lencell
+                cell_min = [((column, row), cell)]
+
+    return ran.choice(cell_min)
 
 
-def matrix_change(matrix: Matrix[T | U], coordinate: Coordinate, dict_val: dict[U, int]) -> Matrix[T | U]:
+def matrix_change[T, U](
+    matrix: Matrix[T | U], coordinate: list[Position], dict_val: dict[U, int]
+) -> Matrix[T | U]:
     """
     Donne une valeur parmi une liste de valeur
     à une matrice sur une série de coordonnées
@@ -155,7 +146,7 @@ def matrix_change(matrix: Matrix[T | U], coordinate: Coordinate, dict_val: dict[
     return matrix
 
 
-def fill(matrix: Matrix[T], position_cell: Position):
+def fill[T](matrix: Matrix[T], position_cell: Position) -> Matrix[T]:
     """
     Regarde si une cellule est entourée de cellule de la même valeur
     le cas échéant, donne la même valeur à la cellule
@@ -190,8 +181,12 @@ def fill(matrix: Matrix[T], position_cell: Position):
     return matrix
 
 
-def random_walk(
-    matrix: Matrix[T], starting_pos: Coordinate, steps: int, max_lenght: int, value: T
+def random_walk[T](
+    matrix: Matrix[T],
+    starting_pos: list[Position],
+    steps: int,
+    max_lenght: int,
+    value: T,
 ):
     """
     Réalise l'algorythme de random walk
@@ -221,13 +216,13 @@ def random_walk(
     return matrix
 
 
-def in_concact(
+def in_concact[T](
     matrix: Matrix[T],
     position_cell: Position,
     value_desired: T,
     value_given: T,
     except_value: T,
-):
+) -> Matrix[T]:
     """
     Regarde si une cellule est en contact
     d'une cellule d'une certaine valeur

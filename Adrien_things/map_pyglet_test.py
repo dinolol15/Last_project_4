@@ -2,7 +2,7 @@ import random as ran
 import pyglet as py
 import Carte as Carte
 import matrix_manager as mm
-from pyglet.window import key, mouse
+from pyglet.window import key
 
 
 window = py.window.Window()
@@ -18,8 +18,8 @@ def on_key_press(symbol, modifier):
         print("A was pressed")
         a = input("choix ")
         if a == "1":
-            tilemap = Carte.w_f_c_simplified(mm.create_matrix((40, 40),
-                            {Carte.Water:1, Carte.Ground:1, Carte.Coast:1}),
+            tilemap = Carte.w_f_c_simplified(mm.create_matrix((60, 60),
+                            {Carte.Plain: 3, Carte.Mountain: 1, Carte.Forest: 2, Carte.Desert: 2, Carte.Sea: 1, Carte.River: 2}),
                                           )
         
         else:
@@ -33,10 +33,10 @@ def on_key_press(symbol, modifier):
                     tilemap[i][j].Color
                 except AttributeError:
                     continue
-                cell = py.shapes.Rectangle(x=50 + j*1,
-                                           y=600 + i*(-1),
-                                           width=1,
-                                           height=1,
+                cell = py.shapes.Rectangle(x=50 + j*10,
+                                           y=600 + i*(-10),
+                                           width=10,
+                                           height=10,
                                            color=tilemap[i][j].Color,
                                            batch=batch 
                                            )

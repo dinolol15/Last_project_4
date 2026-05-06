@@ -8,7 +8,7 @@ import dataclasses as dc
 from dataclasses import dataclass
 
 
-@dataclass(eq=True, frozen=True)
+@dataclass(eq=True)
 class Tile:
     """
     Classe représentant les différents types de terrains
@@ -23,8 +23,13 @@ class Tile:
     # wealth: float will add if time and if Albert
     # wildness: float will add if time and if Albert
 
+
     def __repr__(self):
         return self.Name[0]
+    
+
+    def __hash__(self):
+        return hash(self.Name)
 
 
 Placeholer = Tile(
