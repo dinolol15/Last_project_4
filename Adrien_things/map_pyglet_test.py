@@ -1,6 +1,6 @@
 import random as ran
 import pyglet as py
-import Carte
+import Carte as Carte
 import matrix_manager as mm
 from pyglet.window import key, mouse
 
@@ -23,9 +23,9 @@ def on_key_press(symbol, modifier):
                                           )
         
         else:
-            tilemap = Carte.w_f_c_evolved(mm.create_matrix((40, 40),
+            tilemap = Carte.w_f_c_evolved(mm.create_matrix((500, 500),
                                                            {"baba": 2}),
-                                                            10, [40, 3, Carte.Water], 3)
+                                                            50, [100, 6, Carte.Water], 15)
         print(tilemap)
         for i in range(len(tilemap)):
             for j in range(len(tilemap[1])):
@@ -33,10 +33,10 @@ def on_key_press(symbol, modifier):
                     tilemap[i][j].Color
                 except AttributeError:
                     continue
-                cell = py.shapes.Rectangle(x=50 + j*10,
-                                           y=500 + i*(-10),
-                                           width=10,
-                                           height=10,
+                cell = py.shapes.Rectangle(x=50 + j*1,
+                                           y=600 + i*(-1),
+                                           width=1,
+                                           height=1,
                                            color=tilemap[i][j].Color,
                                            batch=batch 
                                            )

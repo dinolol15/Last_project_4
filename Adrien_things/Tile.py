@@ -19,7 +19,7 @@ class Tile:
 
     Name: str
     Color: tuple[int, int, int] = dc.field(default_factory=tuple[int, int, int])
-    wfc_delete: list[str] = dc.field(default_factory=list[str])
+    wfc_delete: list[str] = dc.field(default_factory=list[str]) #not hashable, to do with enum and namedtuple
     # wealth: float will add if time and if Albert
     # wildness: float will add if time and if Albert
 

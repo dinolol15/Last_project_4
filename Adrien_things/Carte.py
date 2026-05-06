@@ -8,13 +8,11 @@ from collections import Counter
 from typing import TypeVar
 import random as ran
 import matrix_manager as mm
-import Tile
+import Tile as Tile
 
 U = TypeVar("U")
 
-#list est pas hachable --> problème
-
-# faire enum et NamedTule
+# faire enum et NamedTule / list est pas hachable --> problème
 Plain = Tile.Tile("Plain", (124, 252, 0), ("Sea", "River"))  # (1, 1,)
 Mountain = Tile.Tile("Mountain", (139, 137, 137), ("Sea", "River"))  # (0.25, 10,)
 Forest = Tile.Tile("Forest", (34, 139, 34), ("Sea", "Desert", "River"))  # (1.25, 5,)
@@ -50,9 +48,9 @@ def water_placement(
 
 
 def w_f_c_evolved(
-    matrix: mm.Matrix,
+    matrix: mm.Matrix[U],
     water_p_val: int,
-    ran_wal_value: tuple[int, int, object],
+    ran_wal_value: tuple[int, int, U],
     humidity: int = 1,
 ):
     """
@@ -68,7 +66,7 @@ def w_f_c_evolved(
         (i, j) for j in range(len(matrix[len(matrix) - 1])) for i in range(len(matrix))
     ]
     coordinates = COORDINATES
-    coordinates, matrix, water_coordinates = water_placement(
+    coordinates, matrix, water_coordinates = water_placement(  # ToDo
         matrix, coordinates, water_p_val
     )
 
@@ -92,7 +90,7 @@ def w_f_c_evolved(
     return matrix
 
 
-def w_f_c_simplified(matrix: mm.Matrix):
+def w_f_c_simplified(matrix: mm.Matrix[U]) -> mm.Matrix[Tile.Tile | U]:
     """
     Retourne une matrix générée avec un wfc simplifié
 
@@ -127,7 +125,7 @@ def w_f_c_simplified(matrix: mm.Matrix):
     return matrix
 
 
-def condition(matrix: mm.Matrix, position: mm.Position):
+def condition(matrix: mm.Matrix[U], position: mm.Position):
     """
     Enlève les possibilitées impossibles avec l'argument wfc_delete
 
@@ -156,6 +154,18 @@ def condition(matrix: mm.Matrix, position: mm.Position):
             for tile, count in cell1[1].items()
             if tile.Name not in cell.wfc_delete
         }
+
+
+
+# ToDo
+"""def convertisseur_affichage(matrix: mm.Matrix[U]) -> mm.Matrix[Tile.Tile.Color]:
+    
+    Convertit une matrice de type U en une matrice de type Tile
+    
+    for i in matrix:
+        i = i.Color
+    return matrix
+    """
 
 
 if __name__ == "__main__":
