@@ -22,6 +22,25 @@ def create_matrix[T](dim: tuple[int, int], element: T = 0) -> Matrix[T]:
     return [[element for _ in range(dim[1])] for _ in range(dim[0])]
 
 
+def set[T](matrix: Matrix[T], element: T, position: Position) -> Matrix[T]:
+    """
+    Donne une valeur à une cellule d'une matrice
+    position[0] --> axe -y
+    position[1] --> axe x
+    """
+    matrix[position[0]][position[1]] = element
+    return matrix
+
+
+def get[T](matrix: Matrix[T], position: Position) -> T:
+    """
+    Retourne une valeur d'une cellule d'une matrice
+    position[0] --> axe -y
+    position[1] --> axe x
+    """
+    return matrix[position[0]][position[1]]
+
+
 def up[T](matrix: Matrix[T], position: Position) -> tuple[Position, T] | None:
     """
     Retourne la position et la valeur d'une cellule en haut d'une cellule
@@ -30,10 +49,15 @@ def up[T](matrix: Matrix[T], position: Position) -> tuple[Position, T] | None:
     """
     if position[0] == 0:
         return None
-    return ((position[0] - 1, position[1]), matrix[position[0] - 1][position[1]])
+    return (
+        (position[0] - 1, position[1]),
+        matrix[position[0] - 1][position[1]],
+    )
 
 
-def down[T](matrix: Matrix[T], position: Position) -> tuple[Position, T] | None:
+def down[T](
+    matrix: Matrix[T], position: Position
+) -> tuple[Position, T] | None:
     """
     Retourne la position et la valeur d'une cellule en bas d'une cellule
     position[0] --> axe -y
@@ -41,10 +65,15 @@ def down[T](matrix: Matrix[T], position: Position) -> tuple[Position, T] | None:
     """
     if position[0] >= len(matrix) - 1:
         return None
-    return ((position[0] + 1, position[1]), matrix[position[0] + 1][position[1]])
+    return (
+        (position[0] + 1, position[1]),
+        matrix[position[0] + 1][position[1]],
+    )
 
 
-def right[T](matrix: Matrix[T], position: Position) -> tuple[Position, T] | None:
+def right[T](
+    matrix: Matrix[T], position: Position
+) -> tuple[Position, T] | None:
     """
     Retourne la position et la valeur d'une cellule à droite d'une cellule
     position[0] --> axe -y
@@ -52,10 +81,15 @@ def right[T](matrix: Matrix[T], position: Position) -> tuple[Position, T] | None
     """
     if position[1] == len(matrix[position[0]]) - 1:
         return None
-    return ((position[0], position[1] + 1), matrix[position[0]][position[1] + 1])
+    return (
+        (position[0], position[1] + 1),
+        matrix[position[0]][position[1] + 1],
+    )
 
 
-def left[T](matrix: Matrix[T], position: Position) -> tuple[Position, T] | None:
+def left[T](
+    matrix: Matrix[T], position: Position
+) -> tuple[Position, T] | None:
     """
     Retourne la position et la valeur d'une cellule à gauche d'une cellule
     position[0] --> axe -y
@@ -63,7 +97,10 @@ def left[T](matrix: Matrix[T], position: Position) -> tuple[Position, T] | None:
     """
     if position[1] == 0:
         return None
-    return ((position[0], position[1] - 1), matrix[position[0]][position[1] - 1])
+    return (
+        (position[0], position[1] - 1),
+        matrix[position[0]][position[1] - 1],
+    )
 
 
 def random_cell[T](
@@ -78,7 +115,9 @@ def random_cell[T](
     coordinate[1] --> axe x
     """
     coords = [
-        (i, j) for j in range(len(matrix[len(matrix) - 1])) for i in range(len(matrix))
+        (i, j)
+        for j in range(len(matrix[len(matrix) - 1]))
+        for i in range(len(matrix))
     ]
 
     def ran_cell(
@@ -90,7 +129,7 @@ def random_cell[T](
         cell = matrix[column][row]
         return ((column, row), cell)
 
-    if coordinate == None:
+    if coordinate is None:
         return ran_cell(matrix)
     else:
         return ran_cell(matrix, coordinate)
@@ -107,14 +146,14 @@ def lobject_cell[T](
     coordinate[1] --> axe x
     """
 
-    if coordinate == None:
+    if coordinate is None:
         coordinate = [
             (i, j)
             for j in range(len(matrix[len(matrix) - 1]))
             for i in range(len(matrix))
         ]
 
-    cell_min : list[tuple[Position, dict[T, int]]] = []
+    cell_min: list[tuple[Position, dict[T, int]]] = []
     valmin = inf
     for c in coordinate:
         column = c[0]
@@ -154,9 +193,11 @@ def fill[T](matrix: Matrix[T], position_cell: Position) -> Matrix[T]:
     """
     test_value = True
 
-    if up(matrix, position_cell) == None:
+    if up(matrix, position_cell) is None:
         print(down(matrix, position_cell))
-        value_desired = cast(tuple[Position, T], down(matrix, position_cell))[1]
+        value_desired = cast(tuple[Position, T], down(matrix, position_cell))[
+            1
+        ]
     else:
         value_desired = cast(tuple[Position, T], up(matrix, position_cell))[1]
 
@@ -173,7 +214,7 @@ def fill[T](matrix: Matrix[T], position_cell: Position) -> Matrix[T]:
             case _:
                 raise ValueError("the number must stay 4")
         cell = func(matrix, position_cell)
-        if cell != None:
+        if cell is not None:
             if cell[1] != value_desired:
                 test_value = False
     if test_value:
@@ -210,7 +251,7 @@ def random_walk[T](
             lenght = ran.randint(0, max_lenght)
             for _ in range(lenght):
                 cell_test = func(matrix, actual_position)
-                if cell_test != None:
+                if cell_test is not None:
                     actual_position = cell_test[0]
                 matrix[actual_position[0]][actual_position[1]] = value
     return matrix
@@ -243,7 +284,7 @@ def in_concact[T](
             case _:
                 raise ValueError("the number must stay 4")
         cell_test = func(matrix, position_cell)
-        if cell_test != None:
+        if cell_test is not None:
             if cell_test[1] == value_desired:
                 if matrix[position_cell[0]][position_cell[1]] != except_value:
                     test_value = True
@@ -263,14 +304,20 @@ def test():
     matrix_test[2][1] = "down"
     # test in map
     assert cast(tuple[Position, object], up(matrix_test, (1, 1)))[1] == "up"
-    assert cast(tuple[Position, object], down(matrix_test, (1, 1)))[1] == "down"
-    assert cast(tuple[Position, object], left(matrix_test, (1, 1)))[1] == "left"
-    assert cast(tuple[Position, object], right(matrix_test, (1, 1)))[1] == "right"
+    assert (
+        cast(tuple[Position, object], down(matrix_test, (1, 1)))[1] == "down"
+    )
+    assert (
+        cast(tuple[Position, object], left(matrix_test, (1, 1)))[1] == "left"
+    )
+    assert (
+        cast(tuple[Position, object], right(matrix_test, (1, 1)))[1] == "right"
+    )
     # test hors map
-    assert up(matrix_test, (0, 2)) == None
-    assert down(matrix_test, (9, 2)) == None
-    assert left(matrix_test, (5, 0)) == None
-    assert right(matrix_test, (9, 9)) == None
+    assert up(matrix_test, (0, 2)) is None
+    assert down(matrix_test, (9, 2)) is None
+    assert left(matrix_test, (5, 0)) is None
+    assert right(matrix_test, (9, 9)) is None
     print("tous les tests sont passés")
 
 

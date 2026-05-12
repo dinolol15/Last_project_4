@@ -45,6 +45,7 @@ def on_key_press(symbol, modifier):
         r = ran.choice(shapes)
         r.delete()
 
+
 def matrice_creation(dimension_x, dimension_y):
     """Fonction créant une matrice"""
     matrice = []
@@ -52,6 +53,7 @@ def matrice_creation(dimension_x, dimension_y):
         matrice.append([])
         for y in range(dimension_y):
             pass
+        
             
 @window.event
 def on_draw():

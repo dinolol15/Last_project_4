@@ -18,15 +18,17 @@ class Tile:
     """
 
     Name: str
-    Color: tuple[int, int, int] = dc.field(default_factory=tuple[int, int, int])
-    wfc_delete: list[str] = dc.field(default_factory=list[str]) #not hashable, to do with enum and namedtuple
+    Color: tuple[int, int, int] = dc.field(
+        default_factory=tuple[int, int, int]
+    )
+    wfc_delete: list["Tile"] = dc.field(
+        default_factory=list["Tile"]
+    )  # not hashable, to do with enum and namedtuple
     # wealth: float will add if time and if Albert
     # wildness: float will add if time and if Albert
 
-
     def __repr__(self):
         return self.Name[0]
-    
 
     def __hash__(self):
         return hash(self.Name)
