@@ -10,7 +10,7 @@ from Tile import Tile
 
 def convertisseur(matrix: Matrix[Tile]) -> bytes:
     """
-    Convertit une matrice de tile en une matrice de bytes pour l'affichage
+    Convertit une matrice de tile en une matrice de bytes
     """
     coords = [
         (i, j)
