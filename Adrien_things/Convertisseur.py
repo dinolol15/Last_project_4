@@ -1,5 +1,5 @@
 """
-Programme qui convertit une matrice de tile en une matrice de bytes pour l'affichage
+Programme qui convertit une matrice de tile en une matrice de bytes
 
 Auteur: Adrien Buschbeck
 """
