@@ -7,31 +7,42 @@ Auteur: Adrien Buschbeck
 from collections import Counter
 import random as ran
 import matrix_manager as mm
-from matrix_manager import Position, Matrix
-import Tile as Tile
+from matrix_manager import Position, Matrix, set, get
+from Tile import Tile
+from typing import cast
 
-# faire enum et NamedTule / list est pas hachable --> problème
-Plain = Tile.Tile("Plain", (124, 252, 0), ["Sea", "River"])  # (1, 1,)
-Mountain = Tile.Tile("Mountain", (139, 137, 137), ["Sea", "River"])  # (0.25, 10,)
-Forest = Tile.Tile("Forest", (34, 139, 34), ["Sea", "Desert", "River"])  # (1.25, 5,)
-Sea = Tile.Tile(
-    "Sea", (28, 107, 160), ["Plain", "Mountain", "Forest", "Desert"]
-)  # (0, 10000,)
-River = Tile.Tile("River", (70, 130, 180), ["Plain", "Mountain", "Forest"])  # (0, 3,)
-Desert = Tile.Tile("Desert", (237, 201, 175), ["Sea", "Forest"])  # (0.1, 0.5,)
+# faire enum et NamedTule
+Plain = Tile("Plain", (124, 252, 0), [])  # (1, 1,)
+Mountain = Tile("Mountain", (139, 137, 137), [])  # (0.25, 10,)
+Forest = Tile("Forest", (34, 139, 34), [])  # (1.25, 5,)
+Sea = Tile("Sea", (28, 107, 160), [])  # (0, 10000,)
+River = Tile("River", (70, 130, 180), [])  # (0, 3,)
+Desert = Tile("Desert", (237, 201, 175), [])  # (0.1, 0.5,)
 
 # obligatoire pour w_f_c_evolved
-Water = Tile.Tile("Water", (70, 130, 180), ["Ground"])  # (1, 1,)
-Coast = Tile.Tile("Coast", (237, 201, 175), [])  # (1, 1,)
-Ground = Tile.Tile("Ground", (34, 139, 34), ["Water"])  # (1, 1,)
+Water = Tile("Water", (70, 130, 180), [])  # (1, 1,)
+Coast = Tile("Coast", (237, 201, 175), [])  # (1, 1,)
+Ground = Tile("Ground", (34, 139, 34), [])  # (1, 1,)
 
 
-def water_placement[T](
-    matrix: Matrix[T | Tile.Tile],
+Tile.application_wfc_delete(Plain, [Sea, River])
+Tile.application_wfc_delete(Mountain, [Sea, River])
+Tile.application_wfc_delete(Forest, [Sea, Desert, River])
+Tile.application_wfc_delete(Desert, [Sea, Forest])
+Tile.application_wfc_delete(River, [Plain, Mountain, Forest])
+Tile.application_wfc_delete(Sea, [Plain, Mountain, Forest, Desert])
+Tile.application_wfc_delete(Water, [Ground])
+Tile.application_wfc_delete(Ground, [Water])
+
+
+def water_placement(
+    matrix: Matrix[dict[Tile, int] | Tile],
     coordinate: list[Position],
     humidity: int,
-    set_of_value: dict[Tile.Tile, int] = {Water: 1},
-) -> tuple[list[Position], Matrix[T | Tile.Tile], list[Position]]:
+    set_of_value: dict[Tile, int] = {Water: 1},
+) -> tuple[
+    list[Position], Matrix[dict[Tile, int] | Tile], list[Position]
+]:
     """
     Place des zones d'eau de départ
     humidity --> nombres de point d'eau aux départs
@@ -45,10 +56,10 @@ def water_placement[T](
     return (coordinate, matrix, coords_water)
 
 
-def w_f_c_evolved[T](
-    matrix: Matrix[T | Tile.Tile],
+def w_f_c_evolved(
+    matrix: Matrix[dict[Tile, int] | Tile],
     water_p_val: int,
-    ran_wal_value: tuple[int, int, T],
+    ran_wal_value: tuple[int, int, Tile],
     humidity: int = 1,
 ):
     """
@@ -61,7 +72,9 @@ def w_f_c_evolved[T](
     """
 
     COORDINATES = [
-        (i, j) for j in range(len(matrix[len(matrix) - 1])) for i in range(len(matrix))
+        (i, j)
+        for j in range(len(matrix[len(matrix) - 1]))
+        for i in range(len(matrix))
     ]
     coordinates = COORDINATES
     coordinates, matrix, water_coordinates = water_placement(  # ToDo
@@ -77,10 +90,11 @@ def w_f_c_evolved[T](
             ran_wal_value[2],
         )
 
-    for p in COORDINATES:  # todo
+    for p in COORDINATES:
         matrix = mm.in_concact(matrix, p, Water, Coast, Water)
-        if matrix[p[0]][p[1]] != Water and matrix[p[0]][p[1]] != Coast:
-            matrix[p[0]][p[1]] = Ground
+        cell = get(matrix, p)
+        if cell != Water and cell != Coast:
+            set(matrix, Ground, p)
 
     for p in COORDINATES:
         matrix = mm.fill(matrix, p)
@@ -88,7 +102,9 @@ def w_f_c_evolved[T](
     return matrix
 
 
-def w_f_c_simplified[T](matrix: Matrix[T | Tile.Tile]) -> Matrix[Tile.Tile | T]:
+def w_f_c_simplified(
+    matrix: Matrix[dict[Tile, int] | Tile],
+) -> Matrix[Tile | dict[Tile, int]]:
     """
     Retourne une matrix générée avec un wfc simplifié
 
@@ -96,10 +112,14 @@ def w_f_c_simplified[T](matrix: Matrix[T | Tile.Tile]) -> Matrix[Tile.Tile | T]:
     """
 
     COORDINATES = [
-        (i, j) for j in range(len(matrix[len(matrix) - 1])) for i in range(len(matrix))
+        (i, j)
+        for j in range(len(matrix[len(matrix) - 1]))
+        for i in range(len(matrix))
     ]
     coordinates = [
-        (i, j) for j in range(len(matrix[len(matrix) - 1])) for i in range(len(matrix))
+        (i, j)
+        for j in range(len(matrix[len(matrix) - 1]))
+        for i in range(len(matrix))
     ]
     test_value = len(matrix) * len(matrix[len(matrix) - 1])
 
@@ -123,42 +143,43 @@ def w_f_c_simplified[T](matrix: Matrix[T | Tile.Tile]) -> Matrix[Tile.Tile | T]:
     return matrix
 
 
-def condition[T](matrix: Matrix[T], position: Position):
+def condition(
+    matrix: Matrix[dict[Tile, int] | Tile], position: Position
+):
     """
     Enlève les possibilitées impossibles avec l'argument wfc_delete
 
     position[0] : axe -y
     position[1] : axe x
     """
-    cell = matrix[position[0]][position[1]]
+    cell = get(matrix, position)
     for i in range(4):
-        match i:
+        match i:  # ToDo
             case 0:
-                cell1 = mm.up(matrix, position)
+                tested_cell = mm.up(matrix, position)
             case 1:
-                cell1 = mm.down(matrix, position)
+                tested_cell = mm.down(matrix, position)
             case 2:
-                cell1 = mm.right(matrix, position)
+                tested_cell = mm.right(matrix, position)
             case 3:
-                cell1 = mm.left(matrix, position)
+                tested_cell = mm.left(matrix, position)
             case _:
                 raise ValueError("The number must stay 4.")
 
-        if cell1 == None or type(cell1[1]) == Tile.Tile:
+        if tested_cell is None or isinstance(tested_cell[1], Tile):
             continue
-
-        matrix[cell1[0][0]][cell1[0][1]] = {
-            tile: count
-            for tile, count in cell1[1].items()
-            if tile.Name not in cell.wfc_delete
-        }
+        for i in cast(
+            Tile, cell
+        ).wfc_delete:  # ToDo référence dictionnaire
+            cast(tuple[Position, dict[Tile, int]], tested_cell)[1].pop(
+                i, None
+            )
 
 
 # ToDo
-"""def convertisseur_affichage(matrix: mm.Matrix[U]) -> mm.Matrix[Tile.Tile.Color]:
-    
+"""def convertisseur_affichage(matrix: mm.Matrix[U])
+     -> mm.Matrix[Tile.Color]: 
     Convertit une matrice de type U en une matrice de type Tile
-    
     for i in matrix:
         i = i.Color
     return matrix
@@ -169,11 +190,14 @@ if __name__ == "__main__":
 
     matrix_test_1 = w_f_c_simplified(
         mm.create_matrix(
-            (10, 10), {Plain: 3, Mountain: 1, Forest: 2, Desert: 2, Sea: 1, River: 2}
+            (10, 10),
+            {Plain: 3, Mountain: 1, Forest: 2, Desert: 2, Sea: 1, River: 2},
         )
     )
 
-    matrix_test_2 = w_f_c_evolved(mm.create_matrix((10, 10), {}), 5, [25, 1, Water])
+    matrix_test_2 = w_f_c_evolved(
+        mm.create_matrix((10, 10), {}), 5, [25, 1, Water]
+    )
 
     print("\n".join([str(i) for i in matrix_test_1]))
 

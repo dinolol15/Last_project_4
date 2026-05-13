@@ -4,6 +4,7 @@ Fichier contenant la classe Tile
 Auteur: Adrien Buschbeck
 """
 
+from __future__ import annotations
 import dataclasses as dc
 from dataclasses import dataclass
 
@@ -33,9 +34,8 @@ class Tile:
     def __hash__(self):
         return hash(self.Name)
 
-
-Placeholer = Tile(
-    "Placeholer",
-    (255, 255, 255),
-    [],
-)  # (0, 0,)
+    @staticmethod
+    def application_wfc_delete(tile: Tile, list_tile: list["Tile"]):
+        """Ajoute dans le wfc_delete d'une Tile plusieurs Tile"""  # ToDo
+        for i in list_tile:
+            tile.wfc_delete.append(i)

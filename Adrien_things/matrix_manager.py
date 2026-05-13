@@ -158,8 +158,10 @@ def lobject_cell[T](
     for c in coordinate:
         column = c[0]
         row = c[1]
-        cell = matrix[column][row]
-        if type(cell) is dict[T, int]:
+        cell = get(matrix, (column, row))
+        if isinstance(cell, dict):
+
+            cell = cast(dict[T, int], cell)
 
             lencell = len(cell)
 
@@ -173,9 +175,9 @@ def lobject_cell[T](
     return ran.choice(cell_min)
 
 
-def matrix_change[T, U](
-    matrix: Matrix[T | U], coordinate: list[Position], dict_val: dict[U, int]
-) -> Matrix[T | U]:
+def matrix_change[T](
+    matrix: Matrix[T], coordinate: list[Position], dict_val: dict[T, int]
+) -> Matrix[T]:
     """
     Donne une valeur parmi une liste de valeur
     à une matrice sur une série de coordonnées
