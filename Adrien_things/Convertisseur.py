@@ -1,31 +1,34 @@
 """
 Programme qui convertit une matrice de tile en une matrice de bytes
 
-Auteur: Adrien Buschbeck
+Auteur: Adrien Buschbeck, Albert Stanislawek
 """
 
-from matrix_manager import Matrix, get
-from Tile import Tile
 
-
-def convertisseur(matrix: Matrix[Tile]) -> bytes:
+def convertisseur(matrix) -> bytes:
     """
     Convertit une matrice de tile en une matrice de bytes
     """
-    coords = [
-        (i, j)
-        for j in range(len(matrix[len(matrix) - 1]))
-        for i in range(len(matrix))
-    ]
+
+    dim_x = len(matrix)
+    dim_y = len(matrix[0])
+
     bytestr: bytes = b""
-    for c in coords:
-        print(c)
-        cell = get(matrix, c)
-        cell_new = cell.Color + (255,)
-        print(cell_new)
-        bb = b""
-        for i in cell_new:
-            bb += i.to_bytes(1)
-        bytestr += bb
+    for y in range(dim_y):
+        for x in range(dim_x):
+            cell = matrix[y][x]
+            t = cell + (255,)
+            bb = b""
+            for i in t:
+                bbb = i.to_bytes(1, byteorder="big")
+                bb += bbb
+            bytestr += bb
 
     return bytestr
+
+m = [
+    [(5, 6, 7), (5, 6, 7)],
+    [(5, 6, 7), (5, 6, 7)],
+]
+
+print(convertisseur(m))
