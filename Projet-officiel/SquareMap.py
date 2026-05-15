@@ -104,6 +104,13 @@ class SquareMap(ImageDisplay):
         self.pixel_array[i+2] = rgb[2]
         self.pixel_array[i+3] = a
 
+    def get_pixel_rgb(self, pos: tuple[int, int]) -> tuple[int, int, int]:
+        x = pos[0]
+        y = pos[1]
+        i = (y * self.dim_x + x) * 4
+        return self.pixel_array[i], self.pixel_array[i+1], self.pixel_array[i+2]
+
+
     #random test for debug and a cool QR code
     def rand_test(self):
         for y in range(self.dim_y):
