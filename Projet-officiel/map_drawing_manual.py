@@ -5,8 +5,16 @@ First docstring in my life duh
 Program that lets you manually draw a map for the game, the main project
 """
 
+import functools
+from typing import Callable
+
 import pyglet
+from pyglet.window import key
 import math
+
+from dataclasses import dataclass
+
+type rgb_type = tuple[int, int, int]
 
 from SquareMap import SquareMap as Square
 from Camera import Camera
@@ -14,6 +22,96 @@ from Camera import Camera
 
 def floored_to(x, n):
     return n*math.floor(x/n)
+
+@dataclass
+class PointMemory:
+
+    ref: Square
+    max_id: tuple[int, int]
+
+    max_depth: int = 1000
+
+    @dataclass
+    class Cell:
+        x: int
+        y: int
+        previous_rgb: rgb_type
+        rgb: rgb_type
+        action_value: int = 0
+
+        def get_info(self):
+            return self.x, self.y, self.previous_rgb, self.rgb, self.action_value
+
+    def __post_init__(self):
+        self.memory: list[PointMemory.Cell] = []
+        self.memory_step: int = -1
+
+    #debuggers ---------------------------
+    @staticmethod
+    def memo_debug(func: Callable[..., ...]):
+        @functools.wraps(func)
+        def wrapper(self, *args, **kwargs):
+            print(f"Executing {func.__name__} ------------------------\nStats BEFORE execution:")
+            print(self.memory_step)
+            print(self.memory_size)
+            res = func(self, *args, **kwargs)
+            print("Stats AFTER execution:")
+            print(self.memory_step)
+            print(self.memory_size)
+            return res
+        return wrapper
+
+    @staticmethod
+    def depth_crop(func: Callable[..., ...]):
+        @functools.wraps(func)
+        def wrapper(self, *args, **kwargs):
+            res = func(self, *args, **kwargs)
+            diff = self.memory_size - self.max_depth
+            if diff > 0:
+                self.memory = self.memory[diff:]
+                self.memory_step = self.max_depth - 1
+            return res
+        return wrapper
+
+    @property
+    def memory_integrity(self):
+        return self.memory_step > -1 and len(self.memory) > 0
+
+    @property
+    def memory_size(self):
+        return len(self.memory)
+
+    def memo_update(self, x: int, y: int, rgb: rgb_type):
+        diff = self.memory_size - self.memory_step - 1
+        if diff > 0:
+            self.memory = self.memory[:-diff]
+        self.memory_step += 1
+        self.memory.append(self.Cell(x, y, self.ref.get_pixel_rgb((x, y)), rgb))
+
+    @memo_debug
+    @depth_crop
+    def edit_point(self, x: int, y: int, rgb: rgb_type) -> None:
+        if 0 <= x < self.max_id[0] and 0 <= y < self.max_id[1]:
+            self.memo_update(x, y, rgb)
+            self.ref.set_pixel((x, y), rgb)
+
+    @memo_debug
+    @depth_crop
+    def previous(self):
+        if self.memory_step > 0:
+            c = self.memory[self.memory_step].get_info()
+            self.memory_step -= 1
+            self.ref.set_pixel((c[0], c[1]), c[2])
+
+    @memo_debug
+    @depth_crop
+    def next(self):
+        diff = self.memory_size - self.memory_step - 1
+        if diff > 0:
+            self.memory_step += 1
+            c = self.memory[self.memory_step].get_info()
+            self.ref.set_pixel((c[0], c[1]), c[3])
+
 
 
 def main():
@@ -36,6 +134,8 @@ def main():
     pointer.set_pixel((0, 0), (0, 0, 255))
     cam.window_objects.append(pointer)
 
+    memo = PointMemory(s, map_size)
+
     @cam.window.event
     def on_mouse_drag(x, y, dx, dy, buttons, modifiers):
         #draw tangent
@@ -45,13 +145,8 @@ def main():
             elif drawing_mode == "point":
                 point_drawing(int(x), int(y))
 
-    def edit_point(x, y, rgb):
-        max_id = map_size
-        if 0 <= x < max_id[0] and 0 <= y < max_id[1]:
-            s.set_pixel((x, y), (0, 0, 255))
-
     def draw_square(x: int, y: int, rgb, size=2):
-        edit_point(x, y, rgb) #center
+        memo.edit_point(x, y, rgb) #center
         for i in range(1, size):
             l = 1 + 2 * i
             xp = x - i
@@ -60,10 +155,10 @@ def main():
             for n in range(2):
                 for _ in range(l-1):
                     yp += 1 * d
-                    edit_point(xp, yp, rgb)
+                    memo.edit_point(xp, yp, rgb)
                 for _ in range(l-1):
                     xp += 1 * d
-                    edit_point(xp, yp, rgb)
+                    memo.edit_point(xp, yp, rgb)
                 d *= -1
 
     def point_drawing(x: int, y: int):
@@ -115,11 +210,13 @@ def main():
             xx = i
             yy = r[i]
             max_id = map_size
-            if 0 <= xx < max_id[0] and 0 <= yy < max_id[1]:
-                s.set_pixel((xx, yy), (0, 0, 255))
+            draw_square(xx, yy, (0, 0, 255), size=1)
 
     def tile_len():
         return s.tile_size / cam.zoom_scale
+
+    def mouse_pos():
+        return cam.window._mouse_x, cam.window._mouse_y
 
     def mouse_pos_viewport():
         x = cam.pos_x + (cam.window._mouse_x - cam.window_center[0]) / cam.zoom_scale
@@ -152,13 +249,19 @@ def main():
         if 0 <= x_id < max_id[0] and 0 <= y_id < max_id[1]:
             px, py = dc[0] + x_id*t_len, dc[1] + y_id*t_len
             pointer.pos_x, pointer.pos_y = [px, py]
-            if cam.mouse_left:
-                print("ppp")
-                point_drawing(int(px), int(py))
+            # if cam.mouse_left:
+            #     point_drawing(mouse_pos()[0], mouse_pos()[1])
 
+        if cam.keys[key.Z]:
+            print("prev")
+            memo.previous()
+        if cam.keys[key.X]:
+            print("next")
+            memo.next()
 
     pyglet.clock.schedule_interval(update, 1/60.0)
-
     pyglet.app.run()
 
-main()
+
+if __name__ == "__main__":
+    main()
