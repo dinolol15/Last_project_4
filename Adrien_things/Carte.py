@@ -6,10 +6,10 @@ Auteur: Adrien Buschbeck
 
 from collections import Counter
 import random as ran
+from typing import cast
 import matrix_manager as mm
 from matrix_manager import Position, Matrix, set, get
 from Tile import Tile
-from typing import cast
 
 # faire enum et NamedTule
 Plain = Tile("Plain", (124, 252, 0), [])  # (1, 1,)
@@ -31,6 +31,8 @@ Tile.application_wfc_delete(Forest, [Sea, Desert, River])
 Tile.application_wfc_delete(Desert, [Sea, Forest])
 Tile.application_wfc_delete(River, [Plain, Mountain, Forest])
 Tile.application_wfc_delete(Sea, [Plain, Mountain, Forest, Desert])
+
+
 Tile.application_wfc_delete(Water, [Ground])
 Tile.application_wfc_delete(Ground, [Water])
 
@@ -40,9 +42,7 @@ def water_placement(
     coordinate: list[Position],
     humidity: int,
     set_of_value: dict[Tile, int] = {Water: 1},
-) -> tuple[
-    list[Position], Matrix[dict[Tile, int] | Tile], list[Position]
-]:
+) -> tuple[list[Position], Matrix[dict[Tile, int] | Tile], list[Position]]:
     """
     Place des zones d'eau de départ
     humidity --> nombres de point d'eau aux départs
@@ -140,12 +140,11 @@ def w_f_c_simplified(
     for i in COORDINATES:
         matrix = mm.fill(matrix, i)
 
+
     return matrix
 
 
-def condition(
-    matrix: Matrix[dict[Tile, int] | Tile], position: Position
-):
+def condition(matrix: Matrix[dict[Tile, int] | Tile], position: Position):
     """
     Enlève les possibilitées impossibles avec l'argument wfc_delete
 
@@ -168,22 +167,28 @@ def condition(
 
         if tested_cell is None or isinstance(tested_cell[1], Tile):
             continue
-        for i in cast(
-            Tile, cell
-        ).wfc_delete:  # ToDo référence dictionnaire
-            cast(tuple[Position, dict[Tile, int]], tested_cell)[1].pop(
-                i, None
-            )
+
+        pos_tested_cell = tested_cell[0]
+
+        matrix[pos_tested_cell[0]][pos_tested_cell[1]] = {
+            tile: count
+            for tile, count in tested_cell[1].items()
+            if tile not in cell.wfc_delete
+        }
+
+        value_tested_cell: dict[Tile, int] = matrix[pos_tested_cell[0]][
+            pos_tested_cell[1]
+        ]
+
+        value_cell: int = value_tested_cell.get(cell, 0)
+        if value_cell > 0:
+            new_dict = dict(value_tested_cell)
+            new_dict[cell] += 1
+            matrix[pos_tested_cell[0]][pos_tested_cell[1]] = new_dict
 
 
-# ToDo
-"""def convertisseur_affichage(matrix: mm.Matrix[U])
-     -> mm.Matrix[Tile.Color]: 
-    Convertit une matrice de type U en une matrice de type Tile
-    for i in matrix:
-        i = i.Color
-    return matrix
-    """
+# for i in cast(Tile, cell).wfc_delete:  # ToDo référence dictionnaire
+# cast(tuple[Position, dict[Tile, int]], tested_cell)[1].pop(i, None)
 
 
 if __name__ == "__main__":

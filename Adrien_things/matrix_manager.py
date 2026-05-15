@@ -288,7 +288,7 @@ def in_concact[T](
         cell_test = func(matrix, position_cell)
         if cell_test is not None:
             if cell_test[1] == value_desired:
-                if matrix[position_cell[0]][position_cell[1]] != except_value:
+                if get(matrix, position_cell) != except_value:
                     test_value = True
                     break
 
