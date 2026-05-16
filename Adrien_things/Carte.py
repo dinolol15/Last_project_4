@@ -6,32 +6,14 @@ Auteur: Adrien Buschbeck
 
 from collections import Counter
 import random as ran
-from typing import cast
 import matrix_manager as mm
 from matrix_manager import Position, Matrix, set, get
-from Tile import Tile
+from Tile import Tile, placeholder
 
-# faire enum et NamedTule
-Plain = Tile("Plain", (124, 252, 0), [])  # (1, 1,)
-Mountain = Tile("Mountain", (139, 137, 137), [])  # (0.25, 10,)
-Forest = Tile("Forest", (34, 139, 34), [])  # (1.25, 5,)
-Sea = Tile("Sea", (28, 107, 160), [])  # (0, 10000,)
-River = Tile("River", (70, 130, 180), [])  # (0, 3,)
-Desert = Tile("Desert", (237, 201, 175), [])  # (0.1, 0.5,)
-
-# obligatoire pour w_f_c_evolved
+# obligatoire pour les deux algorithmes
 Water = Tile("Water", (70, 130, 180), [])  # (1, 1,)
 Coast = Tile("Coast", (237, 201, 175), [])  # (1, 1,)
 Ground = Tile("Ground", (34, 139, 34), [])  # (1, 1,)
-
-
-Tile.application_wfc_delete(Plain, [Sea, River])
-Tile.application_wfc_delete(Mountain, [Sea, River])
-Tile.application_wfc_delete(Forest, [Sea, Desert, River])
-Tile.application_wfc_delete(Desert, [Sea, Forest])
-Tile.application_wfc_delete(River, [Plain, Mountain, Forest])
-Tile.application_wfc_delete(Sea, [Plain, Mountain, Forest, Desert])
-
 
 Tile.application_wfc_delete(Water, [Ground])
 Tile.application_wfc_delete(Ground, [Water])
@@ -91,7 +73,8 @@ def w_f_c_evolved(
         )
 
     for p in COORDINATES:
-        matrix = mm.in_concact(matrix, p, Water, Coast, Water)
+        if mm.in_concact(matrix, p, Water, Water):
+            set(matrix, Coast, p)
         cell = get(matrix, p)
         if cell != Water and cell != Coast:
             set(matrix, Ground, p)
@@ -137,9 +120,12 @@ def w_f_c_simplified(
         condition(matrix, (cell[0][0], cell[0][1]))
         test_value -= 1
 
+    for p in COORDINATES:
+        if mm.in_concact(matrix, p, Water, placeholder) is False:
+            set(matrix, Ground, p)
+
     for i in COORDINATES:
         matrix = mm.fill(matrix, i)
-
 
     return matrix
 
@@ -183,7 +169,7 @@ def condition(matrix: Matrix[dict[Tile, int] | Tile], position: Position):
         value_cell: int = value_tested_cell.get(cell, 0)
         if value_cell > 0:
             new_dict = dict(value_tested_cell)
-            new_dict[cell] += 1
+            new_dict[cell] += 20
             matrix[pos_tested_cell[0]][pos_tested_cell[1]] = new_dict
 
 
@@ -196,7 +182,7 @@ if __name__ == "__main__":
     matrix_test_1 = w_f_c_simplified(
         mm.create_matrix(
             (10, 10),
-            {Plain: 3, Mountain: 1, Forest: 2, Desert: 2, Sea: 1, River: 2},
+            {Water: 1, Coast: 2},
         )
     )
 

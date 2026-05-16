@@ -18,14 +18,14 @@ def on_key_press(symbol, modifier):
         print("A was pressed")
         a = input("choix ")
         if a == "1":
-            tilemap = Carte.w_f_c_simplified(mm.create_matrix((30, 30),
+            tilemap = Carte.w_f_c_simplified(mm.create_matrix((100, 100),
                             {Carte.Water: 1, Carte.Coast: 2},)
                                           )
         
         else:
-            tilemap = Carte.w_f_c_evolved(mm.create_matrix((50, 50),
+            tilemap = Carte.w_f_c_evolved(mm.create_matrix((100, 100),
                                                            {"baba": 2}),
-                                                            5, [10, 3, Carte.Water], 3)
+                                                            10, [20, 3, Carte.Water], 6)
         print(tilemap)
         for i in range(len(tilemap)):
             for j in range(len(tilemap[1])):
@@ -33,10 +33,10 @@ def on_key_press(symbol, modifier):
                     tilemap[i][j].Color
                 except AttributeError:
                     continue
-                cell = py.shapes.Rectangle(x=50 + j*10,
-                                           y=600 + i*(-10),
-                                           width=10,
-                                           height=10,
+                cell = py.shapes.Rectangle(x=50 + j*5,
+                                           y=600 + i*(-5),
+                                           width=5,
+                                           height=5,
                                            color=tilemap[i][j].Color,
                                            batch=batch 
                                            )
