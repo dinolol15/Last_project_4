@@ -6,7 +6,7 @@ Program that lets you manually draw a map for the game, the main project
 """
 
 import functools
-from typing import Callable
+from typing import Callable, Literal
 
 import pyglet
 from pyglet.window import key
@@ -17,6 +17,7 @@ from dataclasses import dataclass
 type rgb_type = tuple[int, int, int]
 
 from SquareMap import SquareMap as Square
+from ImageDisplay import ImageDisplay as Image
 from Camera import Camera
 
 
@@ -112,13 +113,14 @@ class PointMemory:
             c = self.memory[self.memory_step].get_info()
             self.ref.set_pixel((c[0], c[1]), c[3])
 
-
+current = "draw"
 
 def main():
 
     map_size = (50, 50)
     tile_size = 4
     map_base_size = 5.0
+
 
     drawing_mode = "tangent"
 
@@ -134,16 +136,24 @@ def main():
     pointer.set_pixel((0, 0), (0, 0, 255))
     cam.window_objects.append(pointer)
 
+    mouse_pointer = Image(cam, "UI", layer=0, centered=False, size=.1, zoom_scaling=False, position_scaling=False)
+    mouse_pointer.import_image("pen_icon.png")
+    cam.window_UI_dynamic.append(mouse_pointer)
+
+    drawing_size_label = ...
+
     memo = PointMemory(s, map_size)
 
     @cam.window.event
     def on_mouse_drag(x, y, dx, dy, buttons, modifiers):
         #draw tangent
-        if cam.mouse_left:
+        if cam.mouse_left and current == "draw":
             if drawing_mode == "tangent":
                 tangent_drawing(x, y, dx, dy)
             elif drawing_mode == "point":
                 point_drawing(int(x), int(y))
+        elif cam.mouse_left and current == "eraser":
+            tangent_drawing(x, y, dx, dy, (0, 0, 0))
 
     def draw_square(x: int, y: int, rgb, size=2):
         memo.edit_point(x, y, rgb) #center
@@ -167,7 +177,7 @@ def main():
         x_id, y_id = find_mouse_id(xx, yy)
         draw_square(x_id, y_id, (0, 0, 255), size=1)
 
-    def tangent_drawing(x, y, dx, dy):
+    def tangent_drawing(x, y, dx, dy, rgb: rgb_type = (0, 0, 255)):
         X1, Y1 = mouse_pos_viewport_transform(x - dx, y - dy)
         X2, Y2 = mouse_pos_viewport_transform(x, y)
         x1_id, y1_id = find_mouse_id(X1, Y1)
@@ -210,7 +220,7 @@ def main():
             xx = i
             yy = r[i]
             max_id = map_size
-            draw_square(xx, yy, (0, 0, 255), size=1)
+            draw_square(xx, yy, rgb, size=1)
 
     def tile_len():
         return s.tile_size / cam.zoom_scale
@@ -245,19 +255,31 @@ def main():
         x_id, y_id = find_mouse_id(x, y)
         max_id = map_size
 
-        #pointer animation
+        #pointer drawing animation
         if 0 <= x_id < max_id[0] and 0 <= y_id < max_id[1]:
             px, py = dc[0] + x_id*t_len, dc[1] + y_id*t_len
             pointer.pos_x, pointer.pos_y = [px, py]
             # if cam.mouse_left:
             #     point_drawing(mouse_pos()[0], mouse_pos()[1])
 
+        #pointer animation
+        mouse_pointer.pos_x, mouse_pointer.pos_y = mouse_pos()
+
+        #back and forth
         if cam.keys[key.Z]:
             print("prev")
             memo.previous()
         if cam.keys[key.X]:
             print("next")
             memo.next()
+
+        global current
+        if cam.keys[key.E]:
+            current = "eraser"
+            mouse_pointer.import_image("eraser.png")
+        if cam.keys[key.D]:
+            current = "draw"
+            mouse_pointer.import_image("pen_icon.png")
 
     pyglet.clock.schedule_interval(update, 1/60.0)
     pyglet.app.run()

@@ -174,11 +174,10 @@ class Camera:
         #on-screen objects, require an update() function (without draw, just put into corresponding batch)
         #made for complex objects that are not directly pyglet ones, that for example require position
         for obj in self.window_objects:
-            for dn in self.window_UI_dynamic:
-                try:
-                    obj.update()
-                except:
-                    raise self.ObjectUpdateError
+            try:
+                obj.update()
+            except:
+                raise self.ObjectUpdateError
         #for dynamic text or other stuff
         for dn in self.window_UI_dynamic:
             try:

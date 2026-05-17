@@ -27,10 +27,15 @@ class ImageDisplay:
                  layer: int = 0,
                  position: tuple[int, int] = (0, 0),
                  centered: bool = True,
-                 size: float = 1.0):
+                 size: float = 1.0,
+                 zoom_scaling: bool = True,
+                 position_scaling: bool = True,
+                 ):
 
         self.camera = camera
         self.layer = layer
+        self.zoom_scaling = zoom_scaling
+        self.position_scaling = position_scaling
         #if needed to hide at some point
         self.visible = True
 
@@ -126,10 +131,16 @@ class ImageDisplay:
     #if no camera, stay in position
     def update_sprite_pos(self):
         if self.camera is not None:
-            self.sprite.scale = self.camera.zoom_scale * self.size
-            vp = self.viewport_pos
-            self.sprite.x = vp[0]
-            self.sprite.y = vp[1]
+            self.sprite.scale = self.size
+            if self.zoom_scaling:
+                self.sprite.scale *= self.camera.zoom_scale
+            if self.position_scaling:
+                vp = self.viewport_pos
+                self.sprite.x = vp[0]
+                self.sprite.y = vp[1]
+            else:
+                self.sprite.x = self.pos_x
+                self.sprite.y = self.pos_y
 
         #no camera handling
         else:
