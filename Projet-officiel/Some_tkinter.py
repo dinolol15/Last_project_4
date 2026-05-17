@@ -1,8 +1,25 @@
 
+"""
+Tkinter stuff for popups and saving files
+by Albert S
+"""
+
+
 import tkinter as tk
+from tkinter import messagebox
+from tkinter import ttk
+# from typing import TYPE_CHECKING
+
+
+import savedata as sd
+
 from collections.abc import Callable
 
-from tkinter import messagebox
+import os
+
+
+
+
 
 
 def reinit(exe: Callable):
@@ -17,12 +34,11 @@ def reinit(exe: Callable):
         print("reinit aborted")
 
 TEXT_DESC = "Congrats on your brand new project! You can copy the data of your map with the following button:"
-default_copy = "Lorem ipsum latino brainrot shit amen j'ai un visage detruit crisse de tabernac"
 
 #feat. Gemini AI
-def copy_win(copy_text: str = default_copy):
+def copy_win(copy_text: bytes):
     #if too long
-    show_text = copy_text
+    show_text = str(copy_text)
     if len(show_text) > 50:
         show_text = show_text[:49] + "[...]"
 
@@ -42,41 +58,73 @@ def copy_win(copy_text: str = default_copy):
         root.destroy()
     popup.protocol("WM_DELETE_WINDOW", on_popup_close)
 
-    # Optional: Prevent interacting with the main window until popup is closed
-    #popup.grab_set()
-
     #labels with copy text and description
     label = tk.Label(popup, text=TEXT_DESC, font=("Arial", 10), wraplength=300)
     label.pack(pady=(30, 5))
 
     border_frame = tk.Frame(popup, bg="black")
-    border_frame.pack(pady=50)
+    border_frame.pack(pady=20)
 
-    entry = tk.Label(border_frame, text=show_text, font=("Arial", 11), width=40,)
-    entry.pack(padx=2, pady=2)
+    tbc = tk.Label(border_frame, text=show_text, font=("Arial", 11), width=40,)
+    tbc.pack(padx=2, pady=2)
+
+    label2 = tk.Label(popup, text="Your artwork's name:", font=("Arial", 10), wraplength=300)
+    label2.pack(pady=(30, 5))
 
     writing = tk.Entry(popup, font=("Arial", 11))
     writing.pack(padx=30)
 
     def copy_action():
         text_to_copy = label["text"]
-
-        # Clear the system clipboard and append the new text
         root.clipboard_clear()
-        root.clipboard_append(copy_text)
+        root.clipboard_append(str(copy_text))
 
-        # UI feedback: Change button appearance to show it worked
+        # UI feedback
         copy_button.config(text="Copied!", bg="#4CAF50", fg="white", state="disabled")
 
-        # # Automatically close the popup after 1 second (1000 milliseconds)
-        def close():
-            #popup.destroy()
-            root.destroy()
-        #popup.after(1000, close)
+    def save_file_action():
+        main = "Projet-officiel"
+        save_path = "Save_files"
 
-    # 4. Add the Copy Button
+        full_save_path = os.path.join(main, save_path)
+        if not os.path.exists(save_path):
+            os.mkdir(save_path)
+        file_name = writing.get()
+        file_path = os.path.join(save_path, file_name)
+
+        def ui_feedback(mode: int = 0):
+            if mode == 0:
+                save_file_button.config(text=f"File not saved...", bg="#4CAF50", fg="white", state="normal")
+            else:
+                save_file_button.config(text=f"Saved {file_name}!", bg="#4CAF50", fg="white", state="disabled")
+
+
+        def write_file():
+            respp = messagebox.askyesno("SAVING", "You sure you wanna save your file?")
+            if respp:
+                sd.write_file(file_path, copy_text)
+                ui_feedback(1)
+            else:
+                ui_feedback(0)
+
+
+        if os.path.exists(file_path):
+            resp = messagebox.askyesno("WARNING: OVERWRITING SAVE",
+                                       f'{file_name} already exists, do you want to overwrite it?',
+                                       icon="warning")
+            if resp:
+                write_file()
+            else:
+                ui_feedback(0)
+        else:
+            write_file()
+
+    buttons_frame = tk.Frame(popup)
+    buttons_frame.pack(pady=10)
+
+    #copy button
     copy_button = tk.Button(
-        popup,
+        buttons_frame,
         text="Copy to Clipboard",
         command=copy_action,
         bg="#0078D4",
@@ -84,8 +132,91 @@ def copy_win(copy_text: str = default_copy):
         padx=10,
         pady=5
     )
-    copy_button.pack(pady=10)
+    copy_button.grid(row=0, column=0)
+    #file create button
+    save_file_button = tk.Button(
+        buttons_frame,
+        text="Save as file!",
+        command=save_file_action,
+        bg="#0078D4",
+        fg="white",
+        padx=10,
+        pady=5
+    )
+    save_file_button.grid(row=0, column=1)
 
     tk.mainloop()
 
-copy_win()
+
+def import_project(getter: list):
+    """getter needed as something to 'send' the result while bypassing the mess of tkinter windows closing"""
+
+    root = tk.Tk()
+    root.title("Main Application")
+    root.geometry("700x500")
+    root.withdraw()
+
+    popup = tk.Toplevel(root)
+    popup.title("Importing Project")
+
+    # Make the popup appear centered relative to the main window
+    popup.geometry("500x200")
+
+    def on_popup_close():
+        # Destroying root will close the popup and exit the entire application
+        root.destroy()
+    popup.protocol("WM_DELETE_WINDOW", on_popup_close)
+
+    label = tk.Label(popup, text="Select the project to import:", font=("Arial", 10), wraplength=300)
+    label.pack(pady=(30, 5))
+
+    #list all saves in the directory + their paths
+    def get_save_files() -> dict:
+        script_directory = os.path.dirname(os.path.abspath(__file__))
+        save_path = os.path.join(script_directory, "Save_files")
+        if not os.path.exists(save_path):
+            os.mkdir(save_path)
+        save_files: dict = {}
+        for filename in os.listdir(save_path):
+            full_path = os.path.join(save_path, filename)
+            if os.path.isfile(full_path) and sd.istype(full_path):
+                save_files[filename] = full_path
+        if not len(save_files) == 0:
+            return save_files
+        else:
+            print("nutn")
+            return {}
+
+    saves = get_save_files() # ["file1", "file2", "file3"]
+    choices = [i for i in saves.keys()]
+
+    #the dropdown
+    dropdown = ttk.Combobox(popup, values=choices, state="readonly", font=("Arial", 10))
+    dropdown.pack(padx=15, pady=15)
+    dropdown.set("Your save...")
+
+    def import_action():
+        select = dropdown.get()
+        if select == "Your save...":
+            import_button.config(text=f"Select something please", bg="red", fg="white", state="normal")
+        else:
+            path = saves[select]
+            file: bytes = sd.read_file(path)
+            getter.append(file)
+            popup.destroy()
+            root.destroy()
+
+    import_button = tk.Button(
+        popup,
+        text="Import!",
+        command=import_action,
+        bg="#0078D4",
+        fg="white",
+        padx=10,
+        pady=5
+    )
+    import_button.pack()
+
+
+    root.mainloop()
+

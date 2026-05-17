@@ -9,8 +9,7 @@ import functools
 from typing import Callable, Literal
 import copy
 
-import tkinter as tk
-from tkinter import messagebox
+
 import Some_tkinter as SomeTK
 
 import pyglet
@@ -124,6 +123,7 @@ SYSTEM_PAUSE = False
 drawing_mode = "tangent"
 
 def main():
+    global SYSTEM_PAUSE
 
     map_size = (50, 50)
     tile_size = 4
@@ -145,7 +145,7 @@ def main():
     cam.window_objects.append(pointer)
 
     mouse_pointer = Image(cam, "UI", layer=0, centered=False, size=.1, zoom_scaling=False, position_scaling=False)
-    mouse_pointer.import_image("pen_icon.png")
+    mouse_pointer.import_image("pen_icon.png", "Icons")
     cam.window_UI_dynamic.append(mouse_pointer)
 
     #icons on the side
@@ -153,16 +153,20 @@ def main():
 
     pen_tool_icon = Image(cam, "UI", layer=2, position=(5, 755), centered=False, size=0.1,
                           position_scaling=False, zoom_scaling=False)
-    pen_tool_icon.import_image("pen_icon.png")
+    pen_tool_icon.import_image("pen_icon.png", "Icons")
     cam.window_UI_dynamic.append(pen_tool_icon)
     eraser_tool_icon = Image(cam, "UI", layer=2, position=(5, 705), centered=False, size=0.1,
                           position_scaling=False, zoom_scaling=False)
-    eraser_tool_icon.import_image("eraser_icon.png")
+    eraser_tool_icon.import_image("eraser_icon.png", "Icons")
     cam.window_UI_dynamic.append(eraser_tool_icon)
     save_tool_icon = Image(cam, "UI", layer=2, position=(5, 655), centered=False, size=0.1,
                           position_scaling=False, zoom_scaling=False)
-    save_tool_icon.import_image("save_icon.png")
+    save_tool_icon.import_image("save_icon.png", "Icons")
     cam.window_UI_dynamic.append(save_tool_icon)
+    import_tool_icon = Image(cam, "UI", layer=2, position=(2, 605), centered=False, size=0.1,
+                           position_scaling=False, zoom_scaling=False)
+    import_tool_icon.import_image("import_icon.png", "Icons")
+    cam.window_UI_dynamic.append(import_tool_icon)
 
     #red pointer for selected tool
     tool_pointer = pyglet.shapes.Rectangle(0, 600, 50, 50, (255, 0, 0), batch=cam.batch_UI)
@@ -313,7 +317,7 @@ def main():
             memo.next()
 
         if cam.keys[key.L]:
-            global SYSTEM_PAUSE
+
             SYSTEM_PAUSE = True
             def reinit_func():
                 s.pixel_array = initial_map_data
@@ -322,21 +326,31 @@ def main():
             SYSTEM_PAUSE = False
 
         if cam.keys[key.S]:
+            SYSTEM_PAUSE = True
             print("save")
-            ttl = "SAVING PROJECT"
-            copy_text = str(bytes(s.pixel_array))[2:-1]
-            root = tk.Tk()
-            popup = tk.Toplevel(root)
-            popup.title("Copy Text")
-            popup.geometry("350x150")
+            save_text = bytes(s.pixel_array)
+            SomeTK.copy_win(save_text)
+            SYSTEM_PAUSE = False
+
+        if cam.keys[key.I]:
+            SYSTEM_PAUSE = True
+            print("import")
+            import_data = []
+            SomeTK.import_project(import_data)
+            if len(import_data) > 0:
+                def load_func():
+                    s.pixel_array = bytearray(import_data[0])
+                    s.update_image()
+                SomeTK.reinit(load_func)
+            SYSTEM_PAUSE = False
 
         global current
         if cam.keys[key.E]:
             current = "eraser"
-            mouse_pointer.import_image("eraser_icon.png")
+            mouse_pointer.import_image("eraser_icon.png", "Icons")
         if cam.keys[key.D]:
             current = "draw"
-            mouse_pointer.import_image("pen_icon.png")
+            mouse_pointer.import_image("pen_icon.png", "Icons")
 
     pyglet.clock.schedule_interval(update, 1/60.0)
     pyglet.app.run()

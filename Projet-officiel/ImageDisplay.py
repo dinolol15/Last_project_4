@@ -68,8 +68,7 @@ class ImageDisplay:
         try:
             pyglet.resource.path = [path]
             pyglet.resource.reindex()
-
-            img = pyglet.image.load(name)
+            img = pyglet.resource.image(name)
         except:
             print("Image not found")
         else:
