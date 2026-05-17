@@ -7,6 +7,11 @@ Program that lets you manually draw a map for the game, the main project
 
 import functools
 from typing import Callable, Literal
+import copy
+
+import tkinter as tk
+from tkinter import messagebox
+import Some_tkinter as SomeTK
 
 import pyglet
 from pyglet.window import key
@@ -113,7 +118,10 @@ class PointMemory:
             c = self.memory[self.memory_step].get_info()
             self.ref.set_pixel((c[0], c[1]), c[3])
 
+#globals --------------------------------------
 current = "draw"
+SYSTEM_PAUSE = False
+drawing_mode = "tangent"
 
 def main():
 
@@ -122,8 +130,6 @@ def main():
     map_base_size = 5.0
 
 
-    drawing_mode = "tangent"
-
     cam = Camera((1000, 1000))
     cam.debug_ui()
 
@@ -131,29 +137,62 @@ def main():
     s.rand_test()
     cam.window_objects.append(s)
 
+    initial_map_data = copy.deepcopy(s.pixel_array)
+
     pointer = Square(cam, "game", layer=0, map_dimensions=(1, 1), map_pixel_size=tile_size, size=map_base_size, centered=False)
     pointer.rand_test()
-    pointer.set_pixel((0, 0), (0, 0, 255))
+    pointer.set_pixel((0, 0), (255, 255, 255))
     cam.window_objects.append(pointer)
 
     mouse_pointer = Image(cam, "UI", layer=0, centered=False, size=.1, zoom_scaling=False, position_scaling=False)
     mouse_pointer.import_image("pen_icon.png")
     cam.window_UI_dynamic.append(mouse_pointer)
 
-    drawing_size_label = ...
+    #icons on the side
+    tools_back = pyglet.shapes.Rectangle(0, 600, 50, 200, (255, 255, 255), batch=cam.batch_UI)
+
+    pen_tool_icon = Image(cam, "UI", layer=2, position=(5, 755), centered=False, size=0.1,
+                          position_scaling=False, zoom_scaling=False)
+    pen_tool_icon.import_image("pen_icon.png")
+    cam.window_UI_dynamic.append(pen_tool_icon)
+    eraser_tool_icon = Image(cam, "UI", layer=2, position=(5, 705), centered=False, size=0.1,
+                          position_scaling=False, zoom_scaling=False)
+    eraser_tool_icon.import_image("eraser_icon.png")
+    cam.window_UI_dynamic.append(eraser_tool_icon)
+    save_tool_icon = Image(cam, "UI", layer=2, position=(5, 655), centered=False, size=0.1,
+                          position_scaling=False, zoom_scaling=False)
+    save_tool_icon.import_image("save_icon.png")
+    cam.window_UI_dynamic.append(save_tool_icon)
+
+    #red pointer for selected tool
+    tool_pointer = pyglet.shapes.Rectangle(0, 600, 50, 50, (255, 0, 0), batch=cam.batch_UI)
+    cam.add_to_layer(tool_pointer, 1)
+    def tool_pointer_update(obj: pyglet, camera: "Camera"):
+        data: dict = {"draw": (0, 750),
+                      "eraser": (0, 700),}
+        global current
+        obj.x = data[current][0]
+        obj.y = data[current][1]
+    tool_pointer_wrap = cam.DynamicWrapper(tool_pointer, cam, tool_pointer_update)
+    cam.window_UI_dynamic.append(tool_pointer_wrap)
+
+
 
     memo = PointMemory(s, map_size)
 
     @cam.window.event
     def on_mouse_drag(x, y, dx, dy, buttons, modifiers):
-        #draw tangent
-        if cam.mouse_left and current == "draw":
-            if drawing_mode == "tangent":
-                tangent_drawing(x, y, dx, dy)
-            elif drawing_mode == "point":
-                point_drawing(int(x), int(y))
-        elif cam.mouse_left and current == "eraser":
-            tangent_drawing(x, y, dx, dy, (0, 0, 0))
+        global drawing_mode
+        global SYSTEM_PAUSE
+        if not SYSTEM_PAUSE:
+            #draw tangent
+            if cam.mouse_left and current == "draw":
+                if drawing_mode == "tangent":
+                    tangent_drawing(x, y, dx, dy)
+                elif drawing_mode == "point":
+                    point_drawing(int(x), int(y))
+            elif cam.mouse_left and current == "eraser":
+                tangent_drawing(x, y, dx, dy, (0, 0, 0))
 
     def draw_square(x: int, y: int, rgb, size=2):
         memo.edit_point(x, y, rgb) #center
@@ -273,10 +312,28 @@ def main():
             print("next")
             memo.next()
 
+        if cam.keys[key.L]:
+            global SYSTEM_PAUSE
+            SYSTEM_PAUSE = True
+            def reinit_func():
+                s.pixel_array = initial_map_data
+                s.update_image()
+            SomeTK.reinit(reinit_func)
+            SYSTEM_PAUSE = False
+
+        if cam.keys[key.S]:
+            print("save")
+            ttl = "SAVING PROJECT"
+            copy_text = str(bytes(s.pixel_array))[2:-1]
+            root = tk.Tk()
+            popup = tk.Toplevel(root)
+            popup.title("Copy Text")
+            popup.geometry("350x150")
+
         global current
         if cam.keys[key.E]:
             current = "eraser"
-            mouse_pointer.import_image("eraser.png")
+            mouse_pointer.import_image("eraser_icon.png")
         if cam.keys[key.D]:
             current = "draw"
             mouse_pointer.import_image("pen_icon.png")
