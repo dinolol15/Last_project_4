@@ -154,7 +154,7 @@ def main():
     cam.window_UI_dynamic.append(mouse_pointer)
 
     #icons on the side
-    tools_back = pyglet.shapes.Rectangle(0, 600, 50, 200, (255, 255, 255), batch=cam.batch_UI)
+    tools_back = pyglet.shapes.Rectangle(0, 450, 50, 350, (255, 255, 255), batch=cam.batch_UI)
 
     pen_tool_icon = Image(cam, "UI", layer=2, position=(5, 755), centered=False, size=0.1,
                           position_scaling=False, zoom_scaling=False)
@@ -172,6 +172,18 @@ def main():
                            position_scaling=False, zoom_scaling=False)
     import_tool_icon.import_image("import_icon.png", "Icons")
     cam.window_UI_dynamic.append(import_tool_icon)
+    draw_options_icon = Image(cam, "UI", layer=2, position=(5, 555), centered=False, size=0.1,
+                             position_scaling=False, zoom_scaling=False)
+    draw_options_icon.import_image("draw_options_icon.png", "Icons")
+    cam.window_UI_dynamic.append(draw_options_icon)
+    generate_map_icon = Image(cam, "UI", layer=2, position=(2, 505), centered=False, size=0.14,
+                              position_scaling=False, zoom_scaling=False)
+    generate_map_icon.import_image("generate_icon.png", "Icons")
+    cam.window_UI_dynamic.append(generate_map_icon)
+    help_icon = Image(cam, "UI", layer=2, position=(13, 455), centered=False, size=0.1,
+                              position_scaling=False, zoom_scaling=False)
+    help_icon.import_image("help_icon.png", "Icons")
+    cam.window_UI_dynamic.append(help_icon)
 
     #red pointer for selected tool
     tool_pointer = pyglet.shapes.Rectangle(0, 600, 50, 50, (255, 0, 0), batch=cam.batch_UI)

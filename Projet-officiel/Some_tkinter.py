@@ -312,7 +312,7 @@ def drawing_settings():
 
     close_button = tk.Button(
         root,
-        text="Close",
+        text="Save",
         command=on_close,
         bg="#0078D4",
         fg="white",
