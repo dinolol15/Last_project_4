@@ -93,14 +93,14 @@ class PointMemory:
         self.memory_step += 1
         self.memory.append(self.Cell(x, y, self.ref.get_pixel_rgb((x, y)), rgb))
 
-    @memo_debug
+
     @depth_crop
     def edit_point(self, x: int, y: int, rgb: rgb_type) -> None:
         if 0 <= x < self.max_id[0] and 0 <= y < self.max_id[1]:
             self.memo_update(x, y, rgb)
             self.ref.set_pixel((x, y), rgb)
 
-    @memo_debug
+
     @depth_crop
     def previous(self):
         if self.memory_step > 0:
@@ -108,7 +108,7 @@ class PointMemory:
             self.memory_step -= 1
             self.ref.set_pixel((c[0], c[1]), c[2])
 
-    @memo_debug
+
     @depth_crop
     def next(self):
         diff = self.memory_size - self.memory_step - 1
@@ -154,7 +154,8 @@ def main():
     cam.window_UI_dynamic.append(mouse_pointer)
 
     #icons on the side
-    tools_back = pyglet.shapes.Rectangle(0, 450, 50, 350, (255, 255, 255), batch=cam.batch_UI)
+    toolbar_range = (450, 800)
+    tools_back = pyglet.shapes.Rectangle(0, toolbar_range[0], 50, toolbar_range[1]-toolbar_range[0], (255, 255, 255), batch=cam.batch_UI)
 
     pen_tool_icon = Image(cam, "UI", layer=2, position=(5, 755), centered=False, size=0.1,
                           position_scaling=False, zoom_scaling=False)
@@ -322,11 +323,72 @@ def main():
         if 0 <= x_id < max_id[0] and 0 <= y_id < max_id[1]:
             px, py = dc[0] + x_id*t_len, dc[1] + y_id*t_len
             pointer.pos_x, pointer.pos_y = [px, py]
-            # if cam.mouse_left:
-            #     point_drawing(mouse_pos()[0], mouse_pos()[1])
 
         #pointer animation
         mouse_pointer.pos_x, mouse_pointer.pos_y = mouse_pos()
+
+
+        #toolbar actions ----------------------
+        def toolbar_action(n: int):
+            global current
+            global SYSTEM_PAUSE
+
+            if n == 0: #draw tool
+                current = "draw"
+                mouse_pointer.import_image("pen_icon.png", "Icons")
+
+            elif n == 1:
+                current = "eraser"
+                mouse_pointer.import_image("eraser_icon.png", "Icons")
+
+            elif n == 2: #saving
+                SYSTEM_PAUSE = True
+                print("save")
+                save_text = bytes(s.pixel_array)
+                SomeTK.copy_win(save_text)
+                SYSTEM_PAUSE = False
+
+            elif n == 3: #importing
+                SYSTEM_PAUSE = True
+                print("import")
+                import_data = []
+                SomeTK.import_project(import_data)
+                if len(import_data) > 0:
+                    def load_func():
+                        s.pixel_array = bytearray(import_data[0])
+                        s.update_image()
+                    SomeTK.reinit(load_func)
+                SYSTEM_PAUSE = False
+
+            elif n == 4: #paint settings
+                global drawing_color
+                global drawing_size
+                print(drawing_color)
+                SYSTEM_PAUSE = True
+                print("pen settings")
+                drawing_color, drawing_size = SomeTK.drawing_settings()
+                print(drawing_color)
+                SYSTEM_PAUSE = False
+
+            elif n == 5: #new map
+                ...
+
+            elif n == 6: #get some help
+                print("Stop it, get some help.")
+
+            elif n == 666: #reinit
+                SYSTEM_PAUSE = True
+                def reinit_func():
+                    s.pixel_array = initial_map_data
+                    s.update_image()
+                SomeTK.reinit(reinit_func)
+                SYSTEM_PAUSE = False
+
+
+        if cam.mouse_left:
+            if mouse_pos()[0] < 50 and toolbar_range[0] < mouse_pos()[1] < toolbar_range[1]:
+                obj = math.floor((toolbar_range[1] - mouse_pos()[1]) / 50.0)
+                toolbar_action(obj)
 
         #back and forth
         if cam.keys[key.Z]:
@@ -336,51 +398,24 @@ def main():
             print("next")
             memo.next()
 
+        #some keybinds
         if cam.keys[key.L]:
-
-            SYSTEM_PAUSE = True
-            def reinit_func():
-                s.pixel_array = initial_map_data
-                s.update_image()
-            SomeTK.reinit(reinit_func)
-            SYSTEM_PAUSE = False
+            toolbar_action(666)
 
         if cam.keys[key.S]:
-            SYSTEM_PAUSE = True
-            print("save")
-            save_text = bytes(s.pixel_array)
-            SomeTK.copy_win(save_text)
-            SYSTEM_PAUSE = False
+            toolbar_action(2)
 
         if cam.keys[key.I]:
-            SYSTEM_PAUSE = True
-            print("import")
-            import_data = []
-            SomeTK.import_project(import_data)
-            if len(import_data) > 0:
-                def load_func():
-                    s.pixel_array = bytearray(import_data[0])
-                    s.update_image()
-                SomeTK.reinit(load_func)
-            SYSTEM_PAUSE = False
+            toolbar_action(3)
 
         if cam.keys[key.P]:
-            global drawing_color
-            global drawing_size
-            print(drawing_color)
-            SYSTEM_PAUSE = True
-            print("pen settings")
-            drawing_color, drawing_size = SomeTK.drawing_settings()
-            print(drawing_color)
-            SYSTEM_PAUSE = False
+            toolbar_action(4)
 
-        global current
         if cam.keys[key.E]:
-            current = "eraser"
-            mouse_pointer.import_image("eraser_icon.png", "Icons")
+            toolbar_action(0)
+
         if cam.keys[key.D]:
-            current = "draw"
-            mouse_pointer.import_image("pen_icon.png", "Icons")
+            toolbar_action(1)
 
     pyglet.clock.schedule_interval(update, 1/60.0)
     pyglet.app.run()
