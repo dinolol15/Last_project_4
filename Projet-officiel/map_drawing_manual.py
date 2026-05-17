@@ -122,8 +122,13 @@ current = "draw"
 SYSTEM_PAUSE = False
 drawing_mode = "tangent"
 
+drawing_color = (0, 0, 0)
+drawing_size = 1
+
 def main():
     global SYSTEM_PAUSE
+    global drawing_color
+    global drawing_size
 
     map_size = (50, 50)
     tile_size = 4
@@ -192,13 +197,14 @@ def main():
             #draw tangent
             if cam.mouse_left and current == "draw":
                 if drawing_mode == "tangent":
-                    tangent_drawing(x, y, dx, dy)
+                    tangent_drawing(x, y, dx, dy, drawing_color)
                 elif drawing_mode == "point":
                     point_drawing(int(x), int(y))
             elif cam.mouse_left and current == "eraser":
                 tangent_drawing(x, y, dx, dy, (0, 0, 0))
 
-    def draw_square(x: int, y: int, rgb, size=2):
+    def draw_square(x: int, y: int, rgb):
+        size = drawing_size
         memo.edit_point(x, y, rgb) #center
         for i in range(1, size):
             l = 1 + 2 * i
@@ -218,9 +224,9 @@ def main():
         max_id = map_size
         xx, yy = mouse_pos_viewport_transform(x, y)
         x_id, y_id = find_mouse_id(xx, yy)
-        draw_square(x_id, y_id, (0, 0, 255), size=1)
+        draw_square(x_id, y_id, drawing_color)
 
-    def tangent_drawing(x, y, dx, dy, rgb: rgb_type = (0, 0, 255)):
+    def tangent_drawing(x, y, dx, dy, rgb: rgb_type):
         X1, Y1 = mouse_pos_viewport_transform(x - dx, y - dy)
         X2, Y2 = mouse_pos_viewport_transform(x, y)
         x1_id, y1_id = find_mouse_id(X1, Y1)
@@ -263,7 +269,7 @@ def main():
             xx = i
             yy = r[i]
             max_id = map_size
-            draw_square(xx, yy, rgb, size=1)
+            draw_square(xx, yy, rgb)
 
     def tile_len():
         return s.tile_size / cam.zoom_scale
@@ -292,6 +298,8 @@ def main():
         return x_id, y_id
 
     def update(dt):
+        global SYSTEM_PAUSE
+
         dc = s.downside_corner
         t_len = tile_len()
         x, y = mouse_pos_viewport()
@@ -342,6 +350,16 @@ def main():
                     s.pixel_array = bytearray(import_data[0])
                     s.update_image()
                 SomeTK.reinit(load_func)
+            SYSTEM_PAUSE = False
+
+        if cam.keys[key.P]:
+            global drawing_color
+            global drawing_size
+            print(drawing_color)
+            SYSTEM_PAUSE = True
+            print("pen settings")
+            drawing_color, drawing_size = SomeTK.drawing_settings()
+            print(drawing_color)
             SYSTEM_PAUSE = False
 
         global current

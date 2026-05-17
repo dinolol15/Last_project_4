@@ -6,6 +6,7 @@ by Albert S
 
 
 import tkinter as tk
+
 from tkinter import messagebox
 from tkinter import ttk
 # from typing import TYPE_CHECKING
@@ -217,6 +218,120 @@ def import_project(getter: list):
     )
     import_button.pack()
 
+    root.mainloop()
+
+def drawing_settings():
+
+    chosen_tile = ["#000000"]
+    drawing_size = [1]
+
+    root = tk.Tk()
+    root.title("Main Application")
+    root.geometry("400x500")
+
+    color_label = tk.Label(root, text="Choose a tile to draw:")
+    color_label.pack(pady=10)
+
+    choices_frame = tk.Frame(root)
+    choices_frame.pack(pady=10)
+
+    def on_select():
+        # Grab the value of the currently selected option
+        selected_value = selection_var.get()
+        chosen_tile[0] = data_on_select[selected_value]
+
+    # 1. Create a single tracking variable (StringVar) for the whole group
+    selection_var = tk.StringVar(value="Blue Theme")  # Sets "Blue Theme" as default
+
+    """
+    Water = Tile("Water", , [])  # (1, 1,)
+    Coast = Tile("Coast", (237, 201, 175), [])  # (1, 1,)
+    Ground = Tile("Ground", (34, 139, 34), [])  # (1, 1,)
+    """
+
+    # 2. Define the data for our choices: (Display Text, Hex Color Code)
+
+    blue = "#{:02x}{:02x}{:02x}".format(*(70, 130, 180))
+    yellow = "#{:02x}{:02x}{:02x}".format(*(237, 201, 175))
+    green = "#{:02x}{:02x}{:02x}".format(*(34, 139, 34))
+
+    options = [
+        ("Water", blue),
+        ("Ground", green),
+        ("Coast", yellow),
+        ("Nothing (eraser)", "#000000"),
+    ]
+
+    data_on_select: dict = {}
+
+    # 3. Loop through the data to build the rows dynamically
+    for text, color in options:
+        data_on_select[text] = color
+        # A horizontal frame to keep the row neat
+        row = tk.Frame(choices_frame)
+        row.pack(fill="x", padx=30, pady=5)
+
+        # A. The Radiobutton
+        # They all share 'variable=selection_var', but each has a unique 'value'
+        rb = tk.Radiobutton(
+            row,
+            text=text,
+            variable=selection_var,
+            value=text,
+            command=on_select,
+            font=("Arial", 11)
+        )
+        rb.pack(side="left")
+
+        # B. A tiny spacer frame to create a gap between text and color box
+        tk.Frame(row, width=15).pack(side="left")
+
+        # C. The Colored Square
+        color_square = tk.Frame(row, bg=color, width=16, height=16, bd=1, relief="solid")
+        color_square.pack_propagate(False)  # Prevent the square from collapsing
+        color_square.pack(side="left")
+
+    size_label = tk.Label(root, text="Set the size of the pen:")
+    size_label.pack(pady=10)
+
+    def on_slide(value):
+        drawing_size[0] = value
+
+    slider = tk.Scale(
+        root,
+        from_=1,  # 'from' has an underscore because 'from' is a Python keyword
+        to=5,
+        orient="horizontal",
+        command=on_slide,
+        length=200  # Width of the slider in pixels
+    )
+    slider.pack(pady=0)
+
+    def on_close():
+        root.destroy()
+
+    close_button = tk.Button(
+        root,
+        text="Close",
+        command=on_close,
+        bg="#0078D4",
+        fg="white",
+        padx=10,
+        pady=5
+    )
+    close_button.pack(pady=5)
 
     root.mainloop()
 
+    #returning ----------------------------
+
+    hex_color = chosen_tile[0]
+    hex_color = hex_color.lstrip('#')
+    r = int(hex_color[0:2], 16)
+    g = int(hex_color[2:4], 16)
+    b = int(hex_color[4:6], 16)
+    rgb_tuple = (r, g, b)
+
+    final_draw_size = int(drawing_size[0])
+
+    return rgb_tuple, final_draw_size
