@@ -39,3 +39,6 @@ class Tile:
         """Ajoute dans le wfc_delete d'une Tile plusieurs Tile"""  # ToDo
         for i in list_tile:
             tile.wfc_delete.append(i)
+
+
+placeholder: Tile = Tile("Placeholder", (0, 0, 0), [])

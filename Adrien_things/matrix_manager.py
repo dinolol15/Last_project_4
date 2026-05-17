@@ -263,9 +263,8 @@ def in_concact[T](
     matrix: Matrix[T],
     position_cell: Position,
     value_desired: T,
-    value_given: T,
     except_value: T,
-) -> Matrix[T]:
+) -> bool:
     """
     Regarde si une cellule est en contact
     d'une cellule d'une certaine valeur
@@ -288,13 +287,11 @@ def in_concact[T](
         cell_test = func(matrix, position_cell)
         if cell_test is not None:
             if cell_test[1] == value_desired:
-                if matrix[position_cell[0]][position_cell[1]] != except_value:
+                if get(matrix, position_cell) != except_value:
                     test_value = True
                     break
 
-    if test_value:
-        matrix[position_cell[0]][position_cell[1]] = value_given
-    return matrix
+    return test_value
 
 
 def test():
